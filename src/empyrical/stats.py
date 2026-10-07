@@ -2083,12 +2083,17 @@ def conditional_value_at_risk(returns, cutoff=0.05):
     CVaR : float
         The CVaR value.
     """
-    # PERF: Instead of using the 'value_at_risk' function to find the cutoff
-    # value, which requires a call to numpy.percentile, determine the cutoff
-    # index manually and partition out the lowest returns values. The value at
-    # the cutoff index should be included in the partition.
-    cutoff_index = int((len(returns) - 1) * cutoff)
-    return np.mean(np.partition(returns, cutoff_index)[: cutoff_index + 1])
+    # Mean of observations at or below the same percentile used by value_at_risk.
+    # An order-statistic partition of the first k samples drops extra ties at
+    # that percentile and no longer matches this definition.
+    returns = np.asanyarray(returns)
+    if returns.size == 0:
+        return np.nan
+    cutoff_var = value_at_risk(returns, cutoff=cutoff)
+    tail = returns[returns <= cutoff_var]
+    if tail.size == 0:
+        return np.nan
+    return np.mean(tail)
 
 
 SIMPLE_STAT_FUNCS = [

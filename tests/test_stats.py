@@ -1951,6 +1951,21 @@ class PassArraysEmpyricalProxy(ConvertPandasEmpyricalProxy):
         return super(PassArraysEmpyricalProxy, self).__getattr__(item)
 
 
+def test_conditional_value_at_risk_includes_ties_at_the_cutoff():
+    # 40th percentile of [1, 2, 2, 2] is 2, so every observation is in the tail.
+    returns = np.array([1.0, 2.0, 2.0, 2.0])
+    np.testing.assert_almost_equal(
+        empyrical.conditional_value_at_risk(returns, cutoff=0.4),
+        np.mean(returns),
+    )
+
+
+def test_conditional_value_at_risk_with_nan_matches_var_definition():
+    returns = np.array([0.01, np.nan, -0.02, 0.03, -0.04])
+    assert np.isnan(empyrical.value_at_risk(returns))
+    assert np.isnan(empyrical.conditional_value_at_risk(returns))
+
+
 def test_value_at_risk_empty_input_is_nan():
     assert np.isnan(empyrical.value_at_risk(np.array([])))
     assert np.isnan(empyrical.value_at_risk(pd.Series([], dtype=float)))
