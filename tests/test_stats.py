@@ -1951,6 +1951,15 @@ class PassArraysEmpyricalProxy(ConvertPandasEmpyricalProxy):
         return super(PassArraysEmpyricalProxy, self).__getattr__(item)
 
 
+def test_aggregate_returns_weekly_keeps_iso_week_across_new_year():
+    # 2019-12-30 is a Monday. That ISO week is 2020-W01 and includes 2 Jan.
+    index = pd.to_datetime(["2019-12-30", "2019-12-31", "2020-01-02", "2020-01-03"])
+    returns = pd.Series([0.01, 0.01, 0.01, 0.01], index=index)
+    aggregated = aggregate_returns(returns, empyrical.WEEKLY)
+    assert len(aggregated) == 1
+    np.testing.assert_almost_equal(aggregated.iloc[0], (1.01**4) - 1, DECIMAL_PLACES)
+
+
 def test_conditional_value_at_risk_includes_ties_at_the_cutoff():
     # 40th percentile of [1, 2, 2, 2] is 2, so every observation is in the tail.
     returns = np.array([1.0, 2.0, 2.0, 2.0])
