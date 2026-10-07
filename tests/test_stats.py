@@ -1951,6 +1951,16 @@ class PassArraysEmpyricalProxy(ConvertPandasEmpyricalProxy):
         return super(PassArraysEmpyricalProxy, self).__getattr__(item)
 
 
+def test_roll_up_capture_empty_keeps_index_resolution():
+    empty = pd.Series(
+        dtype=float,
+        index=pd.date_range("2000-01-30", periods=0, freq="D"),
+    )
+    result = empyrical.roll_up_capture(empty, empty, window=1)
+    assert len(result) == 0
+    pd.testing.assert_index_equal(result.index, empty.index)
+
+
 def test_drawdown_series_ndarray_has_one_value_per_return():
     values = np.array([0.10, -0.20, 0.05])
     as_array = empyrical.stats.drawdown_series(values)
